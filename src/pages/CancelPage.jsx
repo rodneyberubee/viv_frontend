@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { cancelReservation } from '../api/apiService';
 
 export default function CancelPage() {
   const [formData, setFormData] = useState({
@@ -6,8 +7,7 @@ export default function CancelPage() {
     confirmation_code: ''
   });
 
-  const [result, setResult] = useState(null);
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const [status, setStatus] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -15,17 +15,13 @@ export default function CancelPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setStatus('Cancelling...');
     try {
-      const response = await fetch(`${apiUrl}/cancel-reservation`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      const data = await response.json();
-      setResult(data);
+      const result = await cancelReservation(formData);
+      setStatus(result.message);
     } catch (err) {
-      console.error('Error:', err);
-      setResult({ error: 'Request failed' });
+      console.error(err);
+      setStatus('Error cancelling reservation.');
     }
   };
 
@@ -37,9 +33,7 @@ export default function CancelPage() {
         <input name="confirmation_code" placeholder="Confirmation Code" onChange={handleChange} required />
         <button type="submit">Cancel Reservation</button>
       </form>
-      {result && (
-        <pre>{JSON.stringify(result, null, 2)}</pre>
-      )}
+      <p>{status}</p>
     </div>
   );
 }
