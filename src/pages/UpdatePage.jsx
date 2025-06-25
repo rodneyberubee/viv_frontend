@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { updateReservation } from '../api/apiService';
 
 export default function UpdatePage() {
   const [formData, setFormData] = useState({
@@ -7,42 +8,37 @@ export default function UpdatePage() {
     date: '',
     time: '',
     party_size: '',
-    name: '',
-    phone: '',
-    email: ''
+    customer: {
+      name: '',
+      phone: '',
+      email: ''
+    }
   });
 
-  const [result, setResult] = useState(null);
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const [status, setStatus] = useState('');
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (['name', 'phone', 'email'].includes(name)) {
+      setFormData((prev) => ({
+        ...prev,
+        customer: { ...prev.customer, [name]: value }
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setStatus('Submitting update...');
     try {
-      const response = await fetch(`${apiUrl}/update-reservation`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          restaurant_id: formData.restaurant_id,
-          confirmation_code: formData.confirmation_code,
-          date: formData.date,
-          time: formData.time,
-          party_size: parseInt(formData.party_size),
-          customer: {
-            name: formData.name,
-            phone: formData.phone,
-            email: formData.email
-          }
-        })
-      });
-      const data = await response.json();
-      setResult(data);
+      const result = await updateReservation(formData);
+      setStatus(result.message);
     } catch (err) {
-      console.error('Error:', err);
-      setResult({ error: 'Request failed' });
+      console.error(err);
+      setStatus('Error updating reservation.');
     }
   };
 
@@ -54,15 +50,13 @@ export default function UpdatePage() {
         <input name="confirmation_code" placeholder="Confirmation Code" onChange={handleChange} required />
         <input name="date" type="date" onChange={handleChange} required />
         <input name="time" type="time" onChange={handleChange} required />
-        <input name="party_size" type="number" placeholder="Party Size" onChange={handleChange} required />
-        <input name="name" placeholder="Customer Name" onChange={handleChange} required />
+        <input name="party_size" placeholder="Party Size" onChange={handleChange} required />
+        <input name="name" placeholder="Name" onChange={handleChange} required />
         <input name="phone" placeholder="Phone" onChange={handleChange} required />
         <input name="email" placeholder="Email" onChange={handleChange} required />
-        <button type="submit">Submit</button>
+        <button type="submit">Update Reservation</button>
       </form>
-      {result && (
-        <pre>{JSON.stringify(result, null, 2)}</pre>
-      )}
+      <p>{status}</p>
     </div>
   );
 }
