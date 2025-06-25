@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createReservation } from '../api/apiService';  // <--- This is where you paste the import
 
 export default function ReservationPage() {
   const [formData, setFormData] = useState({
@@ -12,7 +13,6 @@ export default function ReservationPage() {
   });
 
   const [result, setResult] = useState(null);
-  const apiUrl = import.meta.env.VITE_API_URL;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,23 +21,20 @@ export default function ReservationPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${apiUrl}/reservation`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          restaurant_id: formData.restaurant_id,
-          date: formData.date,
-          time: formData.time,
-          party_size: parseInt(formData.party_size),
-          customer: {
-            name: formData.name,
-            phone: formData.phone,
-            email: formData.email
-          }
-        })
-      });
-      const data = await response.json();
-      setResult(data);
+      const payload = {
+        restaurant_id: formData.restaurant_id,
+        date: formData.date,
+        time: formData.time,
+        party_size: parseInt(formData.party_size),
+        customer: {
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email
+        }
+      };
+
+      const response = await createReservation(payload);  // <--- This is where you call it
+      setResult(response);
     } catch (err) {
       console.error('Error:', err);
       setResult({ error: 'Request failed' });
