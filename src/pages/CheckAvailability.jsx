@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { checkAvailability } from '../api/apiService';
 
 export default function CheckAvailabilityPage() {
   const [formData, setFormData] = useState({
@@ -7,8 +8,7 @@ export default function CheckAvailabilityPage() {
     time: ''
   });
 
-  const [result, setResult] = useState(null);
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const [result, setResult] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -16,17 +16,13 @@ export default function CheckAvailabilityPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setResult('Checking...');
     try {
-      const response = await fetch(`${apiUrl}/check-availability`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      const data = await response.json();
-      setResult(data);
+      const response = await checkAvailability(formData);
+      setResult(response.available ? 'Time slot is available!' : 'Time slot is already booked.');
     } catch (err) {
-      console.error('Error:', err);
-      setResult({ error: 'Request failed' });
+      console.error(err);
+      setResult('Error checking availability.');
     }
   };
 
@@ -39,9 +35,7 @@ export default function CheckAvailabilityPage() {
         <input name="time" type="time" onChange={handleChange} required />
         <button type="submit">Check Availability</button>
       </form>
-      {result && (
-        <pre>{JSON.stringify(result, null, 2)}</pre>
-      )}
+      <p>{result}</p>
     </div>
   );
 }
